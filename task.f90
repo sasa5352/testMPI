@@ -1,4 +1,4 @@
-module Homework
+module Task
     use mpi
     implicit none
     contains
@@ -8,9 +8,13 @@ module Homework
         real(8), intent(in), dimension(:,:) :: A
         integer(4), intent(out) :: x1, y1, x2, y2
         integer(4) :: n, L, R, Up, Down, m, tmp
-        real(8), allocatable :: current_column(:), B(:,:)
-        real(8) :: current_sum, max_sum
+        real(8), allocatable :: currentColumn(:), B(:,:)
+        real(8) :: currentSum, maxSum, totalMax
         logical :: transpos
+        integer(4) :: mpiErr, mpiSize, mpiRank, localMaxTrade, globalMaxTrade 
+    
+        call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
+        call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
 
         m = size(A, dim=1) 
         n = size(A, dim=2) 
@@ -23,28 +27,28 @@ module Homework
             n = size(B, dim=2) 
         else
             B = A     
-            endif
-        allocate(current_column(m))
+        endif
+        allocate(currentColumn(m))
 
-        max_sum=B(1,1)
+        maxSum=B(1,1)
         x1=1
         y1=1
         x2=1
         y2=1
 
-        do L=1, n
+        do L = mpiRank + 1, n, mpiSize
 
-            current_column = B(:, L)            
-            do R=L,n
+            currentColumn = B(:, L)            
+            do R = L,n
  
                 if (R > L) then 
-                    current_column = current_column + B(:, R)
+                    currentColumn = currentColumn + B(:, R)
                 endif
                 
-                call FindMaxInArray(current_column, current_sum, Up, Down) 
+                call FindMaxInArray(currentColumn, currentSum, Up, Down) 
 
-                if (current_sum > max_sum) then
-                    max_sum = current_sum
+                if (currentSum > maxSum) then
+                    maxSum = currentSum
                     x1 = Up
                     x2 = Down
                     y1 = L
@@ -53,7 +57,23 @@ module Homework
             end do
         end do
 
-        deallocate(current_column)
+        call MPI_Allreduce(maxSum, totalMax, 1, MPI_real8, MPI_Max, MPI_COMM_WORLD)
+
+        localMaxTrade = mpiSize + 1
+
+        if (maxSum == totalMax) then
+            localMaxTrade = mpiRank
+        endif
+
+        call MPI_Allreduce(localMaxTrade, globalMaxTrade, 1, MPI_INTEGER4, MPI_Min, MPI_COMM_WORLD)
+
+        call mpi_bcast(x1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
+        call mpi_bcast(x2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
+        call mpi_bcast(y1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
+        call mpi_bcast(y2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
+
+
+        deallocate(currentColumn)
 
         if (transpos) then  
             tmp = x1
@@ -100,7 +120,4 @@ module Homework
     end subroutine FindMaxInArray
 
 
-end module Homework
-
-
-
+end module Task
