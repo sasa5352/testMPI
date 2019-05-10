@@ -57,7 +57,7 @@ module Task
             end do
         end do
 
-        call MPI_Allreduce(maxSum, totalMax, 1, MPI_real8, MPI_Max, MPI_COMM_WORLD)
+        call MPI_Allreduce(maxSum, totalMax, 1, MPI_real8, MPI_Max, MPI_COMM_WORLD, mpiErr)
 
         localMaxTrade = mpiSize + 1
 
@@ -65,7 +65,7 @@ module Task
             localMaxTrade = mpiRank
         endif
 
-        call MPI_Allreduce(localMaxTrade, globalMaxTrade, 1, MPI_INTEGER4, MPI_Min, MPI_COMM_WORLD)
+        call MPI_Allreduce(localMaxTrade, globalMaxTrade, 1, MPI_INTEGER4, MPI_Min, MPI_COMM_WORLD, mpiErr)
 
         call mpi_bcast(x1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
         call mpi_bcast(x2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
