@@ -1,8 +1,9 @@
 module Homework
-    use omp_lib
+    use mpi
     implicit none
     contains
-        subroutine FindMaxCoordinates(A, x1, y1, x2, y2)
+    
+    subroutine GetMaxCoordinates(A, x1, y1, x2, y2)
         implicit none
         real(8), intent(in), dimension(:,:) :: A
         integer(4), intent(out) :: x1, y1, x2, y2
@@ -10,14 +11,10 @@ module Homework
         real(8), allocatable :: current_column(:), B(:,:)
         real(8) :: current_sum, max_sum
         logical :: transpos
-!         real(8), allocatable, dimension(:) :: max_sum   
-!         integer(4), allocatable, dimension(:):: X_1, X_2, Y_1, Y_2
 
         m = size(A, dim=1) 
         n = size(A, dim=2) 
         transpos = .FALSE.
-
-
 
         if (m < n) then 
             transpos = .TRUE.   
@@ -27,9 +24,7 @@ module Homework
         else
             B = A     
             endif
-
         allocate(current_column(m))
-
 
         max_sum=B(1,1)
         x1=1
@@ -48,8 +43,6 @@ module Homework
                 
                 call FindMaxInArray(current_column, current_sum, Up, Down) 
 
-
-                      
                 if (current_sum > max_sum) then
                     max_sum = current_sum
                     x1 = Up
@@ -60,10 +53,7 @@ module Homework
             end do
         end do
 
-
-
         deallocate(current_column)
-
 
         if (transpos) then  
             tmp = x1
@@ -73,42 +63,41 @@ module Homework
             tmp = y2
             y2 = x2
             x2 = tmp
-            endif
+        endif
 
-        end subroutine
+    end subroutine
 
+    subroutine FindMaxInArray(a, Sum, Up, Down)
+        real(8), intent(in), dimension(:) :: a
+        integer(4), intent(out) :: Up, Down
+        real(8), intent(out) :: Sum
+        real(8) :: cur_sum
+        integer(4) :: minus_pos, i
 
-        subroutine FindMaxInArray(a, Sum, Up, Down)
-            real(8), intent(in), dimension(:) :: a
-            integer(4), intent(out) :: Up, Down
-            real(8), intent(out) :: Sum
-            real(8) :: cur_sum
-            integer(4) :: minus_pos, i
-
-            Sum = a(1)
-            Up = 1
-            Down = 1
-            cur_sum = 0
-            minus_pos = 0
-
+        Sum = a(1)
+        Up = 1
+        Down = 1
+        cur_sum = 0
+        minus_pos = 0
 
 
-            do i=1, size(a)
-                cur_sum = cur_sum + a(i)
+
+        do i=1, size(a)
+            cur_sum = cur_sum + a(i)
+            
             if (cur_sum > Sum) then
                 Sum = cur_sum
                 Up = minus_pos + 1
                 Down = i
-                endif
-         
+            endif
+            
             if (cur_sum < 0) then
                 cur_sum = 0
                 minus_pos = i
-                endif
+            endif
+        enddo
 
-            enddo
-
-        end subroutine FindMaxInArray
+    end subroutine FindMaxInArray
 
 
 end module Homework
