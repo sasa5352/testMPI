@@ -11,10 +11,14 @@ program testOpenMP
     
   call mpi_init(mpiErr)
 
+  allocate(matrix(5, 5))
 
-  matrix = rnd_matrix(3000)
+  call random_number(matrix)
+!   matrix = rnd_matrix(3000)
   
   call GetMaxCoordinates(matrix, x1,y1,x2,y2)
+
+  deallocate (matrix)
   
   call mpi_finalize(mpiErr)
   
