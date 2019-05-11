@@ -1,5 +1,5 @@
 module Task
-    use mpi
+    use MPI
     implicit none
     contains
     
@@ -11,10 +11,10 @@ module Task
         real(8), allocatable :: currentColumn(:), B(:,:)
         real(8) :: currentSum, maxSum, totalMax
         logical :: transpos
-        integer(4) :: mpiErr, mpiSize, mpiRank, localMaxTrade, globalMaxTrade 
+        integer(4) :: MPIErr, MPISize, MPIRank, localMaxTrade, globalMaxTrade 
     
-        call mpi_comm_size(MPI_COMM_WORLD, mpiSize, mpiErr)
-        call mpi_comm_rank(MPI_COMM_WORLD, mpiRank, mpiErr)
+        call MPI_COMM_SIZE(MPI_COMM_WORLD, MPISize, MPIErr)
+        call MPI_COMM_RANK(MPI_COMM_WORLD, MPIRank, MPIErr)
 
         m = size(A, dim=1) 
         n = size(A, dim=2) 
@@ -36,7 +36,7 @@ module Task
         x2=1
         y2=1
 
-        do L = mpiRank + 1, n, mpiSize
+        do L = MPIRank + 1, n, MPISize
 
             currentColumn = B(:, L)            
             do R = L,n
@@ -57,20 +57,20 @@ module Task
             end do
         end do
 
-        call MPI_Allreduce(maxSum, totalMax, 1, MPI_real8, MPI_Max, MPI_COMM_WORLD, mpiErr)
+        call MPI_ALLREDUCE(maxSum, totalMax, 1, MPI_REAL8, MPI_Max, MPI_COMM_WORLD, MPIErr)
 
-        localMaxTrade = mpiSize + 1
+        localMaxTrade = MPISize + 1
 
         if (maxSum == totalMax) then
-            localMaxTrade = mpiRank
+            localMaxTrade = MPIRank
         endif
 
-        call MPI_Allreduce(localMaxTrade, globalMaxTrade, 1, MPI_INTEGER4, MPI_Min, MPI_COMM_WORLD, mpiErr)
+        call MPI_ALLREDUCE(localMaxTrade, globalMaxTrade, 1, MPI_INTEGER4, MPI_MIN, MPI_COMM_WORLD, MPIErr)
 
-        call mpi_bcast(x1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
-        call mpi_bcast(x2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
-        call mpi_bcast(y1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
-        call mpi_bcast(y2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, mpiErr)
+        call MPI_BCAST(x1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, MPIErr)
+        call MPI_BCAST(x2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, MPIErr)
+        call MPI_BCAST(y1, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, MPIErr)
+        call MPI_BCAST(y2, 1, MPI_INTEGER4, globalMaxTrade, MPI_COMM_WORLD, MPIErr)
 
 
         deallocate(currentColumn)
